@@ -90,18 +90,28 @@ export default async (request, context) => {
 
 
         async function fetchMinecraftProfile(username) {
-            const uuidRes = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+            const playerRes = await fetch(
+                `https://api.crafty.gg/api/v2/players/${username}`
+            );
 
-            if (!uuidRes.ok) throw new Error("Minecraft user not found");
-            const {id: uuid,name} = await uuidRes.json();
-            const historyRes = await fetch(`https://api.mojang.com/user/profiles/${uuid}/names`);
-            const nameHistory = await historyRes.json();
-            const sessionRes = await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`);
-            const sessionJson = await sessionRes.json();
-            const textureProp = sessionJson.properties.find(p => p.name === "textures");
-            const textures = JSON.parse(atob(textureProp.value)).textures;
-            return {uuid,name,nameHistory,skinUrl: textures.SKIN ?.url,capeUrl: textures.CAPE ?.url || null,downloadSkin: `https://crafatar.com/skins/${uuid}`,};
+            if (!playerRes.ok) {
+                throw new Error("Minecraft player not found");
+            }
+
+            const playerJson = await playerRes.json();
+
+            const data = playerJson.data;
+
+            return {
+                uuid: data.uuid,
+                name: data.username,
+                nameHistory: data.username_history || [],
+                hasCape: Boolean(data.capes ?.length),
+                skinUrl: `https://api.crafty.gg/api/v2/skins/${username}/raw`,
+                downloadSkin: `https://api.crafty.gg/api/v2/skins/${username}/raw`,
+            };
         }
+
 
         const message = JSON.parse(rawBody);
         if (message.type === InteractionType.PING) {
@@ -310,4 +320,5 @@ export default async (request, context) => {
             }
         );
     }
+
 };
