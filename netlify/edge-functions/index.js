@@ -55,16 +55,6 @@ export default async (request, context) => {
             );
         }
 
-        function countryCodeToFlagEmoji(code) {
-	        if (!code || code.length !== 2) return "🌍";
-	        const upper = code.toUpperCase();
-	        const A = 0x1F1E6;
-	        return String.fromCodePoint(
-		        A + upper.charCodeAt(0) - 65,
-		        A + upper.charCodeAt(1) - 65
-	        );
-        }
-
         async function fetchRobloxProfile(username) {
             const idRes = await fetch("https://users.roblox.com/v1/usernames/users", {
                 method: "POST",
@@ -92,6 +82,16 @@ export default async (request, context) => {
                 profile,
                 avatarUrl
             };
+        }
+
+		async function countryCodeToFlagEmoji(code) {
+	        if (!code || code.length !== 2) return "🌍";
+	        const upper = code.toUpperCase();
+	        const A = 0x1F1E6;
+	        return String.fromCodePoint(
+		        A + upper.charCodeAt(0) - 65,
+		        A + upper.charCodeAt(1) - 65
+	        );
         }
 
         async function fetchMinecraftProfile(username) {
