@@ -105,10 +105,9 @@ export default async (request, context) => {
             return {
                 uuid: data.uuid,
                 name: data.username,
-                nameHistory: data.username_history || [],
                 hasCape: Boolean(data.capes ?.length),
-                skinUrl: `https://api.crafty.gg/api/v2/skins/${username}/raw`,
-                downloadSkin: `https://api.crafty.gg/api/v2/skins/${username}/raw`,
+                skinUrl: `https://minotar.net/helm/${uuid}/512.png`,
+                downloadSkin: `https://minecraft.tools/download-skin/${username}`,
             };
         }
 
@@ -227,12 +226,6 @@ export default async (request, context) => {
                                                 value: mc.uuid,
                                             },
                                             {
-                                                name: "Name History",
-                                                value: mc.nameHistory.length ?
-                                                    mc.nameHistory.slice(-5).join(" → ") :
-                                                    "No history available",
-                                            },
-                                            {
                                                 name: "Cape",
                                                 value: mc.hasCape ? "Yes" : "No",
                                                 inline: true,
@@ -320,3 +313,4 @@ export default async (request, context) => {
         );
     }
 };
+
