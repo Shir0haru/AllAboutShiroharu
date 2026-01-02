@@ -234,7 +234,7 @@ export default async (request, context) => {
                                             },
                                             {
                                                 name: "Information",
-                                                value: "Location: 
+                                                value: "Location: ${mc.userLocation}
                                             },
                                         ],
                                     }],
@@ -319,6 +319,7 @@ export default async (request, context) => {
         );
     }
 };
+
 
 
 
