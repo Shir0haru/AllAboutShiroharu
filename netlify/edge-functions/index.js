@@ -1,7 +1,13 @@
-import {InteractionResponseType,InteractionType,verifyKey} from "https://esm.sh/discord-interactions@3.4.0";
+import {InteractionResponseType, InteractionType, verifyKey } from "https://esm.sh/discord-interactions@3.4.0";
 
-const INFO_COMMAND = {name: "Info", description: "Get an information about this bot.",};
-const HELP_COMMAND = {name: "Help", description: "Get a list of commands available.",};
+const INFO_COMMAND = {
+    name: "Info",
+    description: "Get an information about this bot.",
+};
+const HELP_COMMAND = {
+    name: "Help",
+    description: "Get a list of commands available.",
+};
 const PROFILE_COMMAND = {
     name: "profile",
     description: "Fetch the Developer's Game Profile.",
@@ -55,42 +61,7 @@ export default async (request, context) => {
             );
         }
 
-		async function fetchRobloxCreations(userId) {
-			const res = await fetch(`https://catalog.roblox.com/v1/search/items?creatorTargetId=${userId}&creatorType=User&limit=5&sortOrder=Desc&sortType=Updated`);
-			const json = await res.json();
-			return json.data.map(item => ({
-				name: item.name,
-				type: item.assetType.name,
-				url: `https://www.roblox.com/catalog/${item.id}`,
-			}));
-		}
-
-		async function fetchRobloxGroups(userId) {
-			const res = await fetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles`);
-			const json = await res.json();
-
-			return json.data
-				.sort((a, b) => b.role.rank - a.role.rank)
-				.slice(0, 5)
-				.map(g => ({
-					name: g.group.name,
-					role: g.role.name,
-					url: `https://www.roblox.com/groups/${g.group.id}`,
-				}));
-		}
-
-		async function fetchRobloxGames(userId) {
-			const res = await fetch(`https://games.roblox.com/v2/users/${userId}/games?accessFilter=Public&limit=5`);
-			const json = await res.json();
-
-			return json.data.map(game => ({
-				name: game.name,
-				visits: game.placeVisits,
-				url: `https://www.roblox.com/games/${game.rootPlaceId}`,
-			}));
-		}
-
-		async function fetchRobloxProfile(username) {
+        async function fetchRobloxProfile(username) {
             const idRes = await fetch("https://users.roblox.com/v1/usernames/users", {
                 method: "POST",
                 headers: {
@@ -103,7 +74,7 @@ export default async (request, context) => {
             });
 
             const idJson = await idRes.json();
-            const user = idJson.data ?. [0];
+            const user = idJson.data ?.[0];
             if (!user) throw new Error("Roblox user not found");
 
             const userId = user.id;
@@ -111,23 +82,81 @@ export default async (request, context) => {
             const profile = await profileRes.json();
             const avatarRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userId}&size=420x420&format=Png&isCircular=true`);
             const avatarJson = await avatarRes.json();
-            const avatarUrl = avatarJson.data ?. [0] ?.imageUrl;
-			const [creations, groups, games] = await Promise.all([
-        		fetchRobloxCreations(userId),
-        		fetchRobloxGroups(userId),
-        		fetchRobloxGames(userId)
-    		]);
-    		return { userId, profile, avatarUrl, creations, groups, games };
+            const avatarUrl = avatarJson.data ?.[0]?.imageUrl;
+            const wearingRes = await fetch(`https://avatar.roblox.com/v1/users/${userId}/currently-wearing`);
+            const wearingJson = await wearingRes.json();
+            const assetIds = wearingJson.assetIds || [];
+            let assets = [];
+            if (assetIds.length > 0) {
+                const catalogRes = await fetch(
+                    "https://catalog.roblox.com/v1/catalog/items/details", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            items: assetIds.map(id => ({
+                                itemType: "Asset",
+                                id,
+                            })),
+                        }),
+                    }
+                );
+                const catalogJson = await catalogRes.json();
+                assets = catalogJson.data || [];
+                return {
+                    userId,
+                    profile,
+                    avatarUrl,
+                    assets
+                };
+            }
         }
 
-		function countryCodeToFlagEmoji(code) {
-	        if (!code || code.length !== 2) return "🌍";
-	        const upper = code.toUpperCase();
-	        const A = 0x1F1E6;
-	        return String.fromCodePoint(
-		        A + upper.charCodeAt(0) - 65,
-		        A + upper.charCodeAt(1) - 65
-	        );
+        function groupAvatarAssets(assets) {
+            const map = {
+                Head: [],
+                Hair: [],
+                "Classic Shirts": [],
+                "Classic Pants": [],
+                Accessories: [],
+                Other: [],
+            };
+
+            for (const item of assets) {
+                const name = `${item.name} — by ${item.creatorName}`;
+
+                switch (item.assetType) {
+                    case "Head":
+                        map.Head.push(name);
+                        break;
+                    case "HairAccessory":
+                        map.Hair.push(name);
+                        break;
+                    case "Shirt":
+                        map["Classic Shirts"].push(name);
+                        break;
+                    case "Pants":
+                        map["Classic Pants"].push(name);
+                        break;
+                    case "Accessory":
+                        map.Accessories.push(name);
+                        break;
+                    default:
+                        map.Other.push(name);
+                }
+            }
+            return map;
+        }
+
+        function countryCodeToFlagEmoji(code) {
+            if (!code || code.length !== 2) return "🌍";
+            const upper = code.toUpperCase();
+            const A = 0x1F1E6;
+            return String.fromCodePoint(
+                A + upper.charCodeAt(0) - 65,
+                A + upper.charCodeAt(1) - 65
+            );
         }
 
         async function fetchMinecraftProfile(username) {
@@ -140,10 +169,10 @@ export default async (request, context) => {
             }
             const playerJson = await playerRes.json();
             const data = playerJson.data;
-            const location = playerJson.location;
             return {
                 uuid: data.uuid,
                 name: data.username,
+                profile: `https://crafty.gg/@${data.username}`,
                 skinUrl: `https://minotar.net/helm/${data.uuid}/512.png`,
                 previewSkin: `https://crafty.gg/skins/${data.skins[0].id}`,
                 previewCape: `https://crafty.gg/capes/${data.capes[0].id}`,
@@ -201,16 +230,17 @@ export default async (request, context) => {
                     });
 
                 case PROFILE_COMMAND.name.toLowerCase(): {
-                    const game = message.data.options ?. [0] ?.value;
+                    const game = message.data.options ?.[0]?.value;
                     try {
                         if (game === "roblox") {
-                            const USERNAME = "Shir0haru";
-                            const {userId, profile,  avatarUrl} = await fetchRobloxProfile(USERNAME);
-							const [creations, groups, games] = await Promise.all([
-								fetchRobloxCreations(userId),
-								fetchRobloxGroups(userId),
-								fetchRobloxGames(userId),
-							]);
+                            const USERNAME = "JohnDoe";
+                            const {userId, profile, avatarUrl, assets} = await fetchRobloxProfile(USERNAME);
+                            const avatarItems = groupAvatarAssets(assets);
+                            const fields = Object.entries(avatarItems).map(([category, items]) => ({
+	                            name: category,
+	                            value: items.length ? items.join("\n") : "null",
+	                            inline: false,
+                            }));
                             return new Response(JSON.stringify({
                                 type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                                 data: {
@@ -230,18 +260,18 @@ export default async (request, context) => {
                                                 name: "Created",
                                                 value: profile.created,
                                             },
-											{
-												name: "Latest Creations",
-												value: creations.length ? creations.map(c => `• **${c.type}**: [${c.name}](${c.url})`).join("\n") : "None",
-											},
-											{
-												name: "Top Groups",
-												value: groups.length ? groups.map(g => `• [${g.name}](${g.url}) — *${g.role}*`).join("\n") : "None",
-											},
-											{
-												name: "Created Experiences",
-												value: games.length ? games.map(g => `• [${g.name}](${g.url}) — 👥 ${g.visits.toLocaleString()}`).join("\n") : "None",
-											},
+                                            ...fields,
+                                        ],
+                                    }],
+                                    components: [{
+                                        type: 1,
+                                        components: [
+                                            {
+                                                type: 2,
+                                                style: 5,
+                                                label: "Complete Profile",
+                                                url: `https://www.roblox.com/users/${userId}/profile`,
+                                            },
                                         ],
                                     }],
                                 },
@@ -254,7 +284,7 @@ export default async (request, context) => {
                         }
 
                         if (game === "minecraft") {
-                            const USERNAME = "Shir0haru";
+                            const USERNAME = "JohnDoe";
                             const mc = await fetchMinecraftProfile(USERNAME);
 
                             return new Response(JSON.stringify({
@@ -293,12 +323,20 @@ export default async (request, context) => {
                                     }],
                                     components: [{
                                         type: 1,
-                                        components: [{
-                                            type: 2,
-                                            style: 5,
-                                            label: "Download Skin",
-                                            url: mc.downloadSkin,
-                                        }],
+                                        components: [
+                                            {
+                                                type: 2,
+                                                style: 5,
+                                                label: "Complete Profile",
+                                                url: mc.profile,
+                                            },
+                                            {
+                                                type: 2,
+                                                style: 5,
+                                                label: "Download Skin",
+                                                url: mc.downloadSkin,
+                                            },
+                                        ],
                                     }],
                                 },
                             }), {
@@ -373,10 +411,3 @@ export default async (request, context) => {
         );
     }
 };
-
-
-
-
-
-
-
