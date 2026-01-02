@@ -109,6 +109,8 @@ export default async (request, context) => {
                 previewSkin: `https://crafty.gg/skins/${skins.id}`,
                 previewCape: `https://crafty.gg/capes/${capes.id}`,
                 userLocation: location.code + " " + location.country,
+                monthlyViews: data.views_monthly,
+                lifetimeViews: data.views_lifetime,
                 downloadSkin: `https://minecraft.tools/download-skin/${data.username}`,
             };
         }
@@ -234,7 +236,7 @@ export default async (request, context) => {
                                             },
                                             {
                                                 name: "Information",
-                                                value: "Location: ${mc.userLocation}
+                                                value: "Location: ${mc.userLocation}\nMonthly Views: ${mc.monthlyViews}\nLifetime Views: ${mc.lifetimeViews}",
                                             },
                                         ],
                                     }],
@@ -319,6 +321,7 @@ export default async (request, context) => {
         );
     }
 };
+
 
 
 
