@@ -84,7 +84,7 @@ export default async (request, context) => {
             };
         }
 
-		async function countryCodeToFlagEmoji(code) {
+		function countryCodeToFlagEmoji(code) {
 	        if (!code || code.length !== 2) return "🌍";
 	        const upper = code.toUpperCase();
 	        const A = 0x1F1E6;
@@ -333,6 +333,7 @@ export default async (request, context) => {
         );
     }
 };
+
 
 
 
