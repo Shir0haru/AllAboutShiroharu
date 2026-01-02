@@ -233,7 +233,7 @@ export default async (request, context) => {
                     const game = message.data.options ?.[0]?.value;
                     try {
                         if (game === "roblox") {
-                            const USERNAME = "JohnDoe";
+                            const USERNAME = "Shir0haru";
                             const {userId, profile, avatarUrl, assets} = await fetchRobloxProfile(USERNAME);
                             const avatarItems = groupAvatarAssets(assets);
                             const fields = Object.entries(avatarItems).map(([category, items]) => ({
@@ -284,7 +284,7 @@ export default async (request, context) => {
                         }
 
                         if (game === "minecraft") {
-                            const USERNAME = "JohnDoe";
+                            const USERNAME = "Shir0haru";
                             const mc = await fetchMinecraftProfile(USERNAME);
 
                             return new Response(JSON.stringify({
@@ -335,8 +335,8 @@ export default async (request, context) => {
                                                 style: 5,
                                                 label: "Download Skin",
                                                 url: mc.downloadSkin,
-                                            },
-                                        ],
+                                            }
+                                        ]
                                     }],
                                 },
                             }), {
