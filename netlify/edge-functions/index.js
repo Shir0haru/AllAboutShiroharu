@@ -109,8 +109,8 @@ export default async (request, context) => {
                 uuid: data.uuid,
                 name: data.username,
                 skinUrl: `https://minotar.net/helm/${data.uuid}/512.png`,
-                previewSkin: `https://crafty.gg/skins/${data.skins.0.id}`,
-                previewCape: `https://crafty.gg/capes/${data.capes.0.id}`,
+                previewSkin: `https://crafty.gg/skins/${data.skins.[0].id}`,
+                previewCape: `https://crafty.gg/capes/${data.capes.[0].id}`,
                 userLocation: data.location ? `${countryCodeToFlagEmoji(data.location.code)} ${data.location.country}` : "🌍 Unknown",
                 monthlyViews: data.views_monthly,
                 lifetimeViews: data.views_lifetime,
@@ -333,4 +333,5 @@ export default async (request, context) => {
         );
     }
 };
+
 
