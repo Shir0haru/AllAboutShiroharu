@@ -88,7 +88,6 @@ export default async (request, context) => {
             return {userId, profile, avatarUrl};
         }
 
-
         async function fetchMinecraftProfile(username) {
             const playerRes = await fetch(
                 `https://api.crafty.gg/api/v2/players/${username}`
@@ -97,17 +96,14 @@ export default async (request, context) => {
             if (!playerRes.ok) {
                 throw new Error("Minecraft player not found");
             }
-
             const playerJson = await playerRes.json();
-
             const data = playerJson.data;
-
             return {
                 uuid: data.uuid,
                 name: data.username,
                 hasCape: Boolean(data.capes ?.length),
-                skinUrl: `https://minotar.net/helm/${uuid}/512.png`,
-                downloadSkin: `https://minecraft.tools/download-skin/${username}`,
+                skinUrl: `https://minotar.net/helm/${data.uuid}/512.png`,
+                downloadSkin: `https://minecraft.tools/download-skin/${data.username}`,
             };
         }
 
@@ -313,4 +309,5 @@ export default async (request, context) => {
         );
     }
 };
+
 
