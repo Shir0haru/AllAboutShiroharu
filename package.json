@@ -1,0 +1,23 @@
+{
+  "name": "discord-netlify",
+  "version": "1.0.0",
+  "description": "A Fork of discord-trout by IanMitchell that aims to works on Netlify.",
+  "author": "Chris Nicholas Siung",
+  "license": "MIT",
+  "dependencies": {
+    "discord-interactions": "^3.4.0"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "repository": {
+    "url": "https://dev.azure.com/Shiroharu/Discord-Netlify"
+  },
+  "keywords": [
+    "discord",
+    "discordbot",
+    "discordinteractions",
+    "javascript",
+    "netlify"
+  ]
+}
