@@ -84,6 +84,41 @@ export default async (request, context) => {
             };
         }
 
+		async function fetchRobloxCreations(userId) {
+			const res = await fetch(`https://catalog.roblox.com/v1/search/items?creatorTargetId=${userId}&creatorType=User&limit=5&sortOrder=Desc&sortType=Updated`);
+			const json = await res.json();
+			return json.data.map(item => ({
+				name: item.name,
+				type: item.assetType.name,
+				url: `https://www.roblox.com/catalog/${item.id}`,
+			}));
+		}
+
+		async function fetchRobloxGroups(userId) {
+			const res = await fetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles`);
+			const json = await res.json();
+
+			return json.data
+				.sort((a, b) => b.role.rank - a.role.rank)
+				.slice(0, 5)
+				.map(g => ({
+					name: g.group.name,
+					role: g.role.name,
+					url: `https://www.roblox.com/groups/${g.group.id}`,
+				}));
+		}
+
+		async function fetchRobloxGames(userId) {
+			const res = await fetch(`https://games.roblox.com/v2/users/${userId}/games?accessFilter=Public&limit=5`);
+			const json = await res.json();
+
+			return json.data.map(game => ({
+				name: game.name,
+				visits: game.placeVisits,
+				url: `https://www.roblox.com/games/${game.rootPlaceId}`,
+			}));
+		}
+
 		function countryCodeToFlagEmoji(code) {
 	        if (!code || code.length !== 2) return "🌍";
 	        const upper = code.toUpperCase();
@@ -190,18 +225,23 @@ export default async (request, context) => {
                                         fields: [{
                                                 name: "User ID",
                                                 value: String(userId),
-                                                inline: true
                                             },
                                             {
                                                 name: "Created",
                                                 value: profile.created,
-                                                inline: true
                                             },
-                                            {
-                                                name: "Banned",
-                                                value: profile.isBanned ? "Yes" : "No",
-                                                inline: true
-                                            },
+											{
+												name: "Latest Creations",
+												value: creations.length ? creations.map(c => `• **${c.type}**: [${c.name}](${c.url})`).join("\n") : "None",
+											},
+											{
+												name: "Top Groups",
+												value: groups.length ? groups.map(g => `• [${g.name}](${g.url}) — *${g.role}*`).join("\n") : "None",
+											},
+											{
+												name: "Created Experiences",
+												value: games.length ? games.map(g => `• [${g.name}](${g.url}) — 👥 ${g.visits.toLocaleString()}`).join("\n") : "None",
+											},
                                         ],
                                     }],
                                 },
@@ -333,6 +373,7 @@ export default async (request, context) => {
         );
     }
 };
+
 
 
 
