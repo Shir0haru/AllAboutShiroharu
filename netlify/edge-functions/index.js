@@ -204,13 +204,12 @@ export default async (request, context) => {
                     try {
                         if (game === "roblox") {
                             const USERNAME = "Shir0haru";
-                            const {
-                                userId,
-                                profile,
-                                avatarUrl
-                            } =
-                            await fetchRobloxProfile(USERNAME);
-
+                            const {userId, profile,  avatarUrl} = await fetchRobloxProfile(USERNAME);
+							const [creations, groups, games] = await Promise.all([
+								fetchRobloxCreations(userId),
+								fetchRobloxGroups(userId),
+								fetchRobloxGames(userId),
+							]);
                             return new Response(JSON.stringify({
                                 type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                                 data: {
@@ -373,6 +372,7 @@ export default async (request, context) => {
         );
     }
 };
+
 
 
 
