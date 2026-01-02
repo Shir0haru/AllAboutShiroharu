@@ -217,25 +217,24 @@ export default async (request, context) => {
                                 data: {
                                     embeds: [{
                                         title: `${mc.name} (Minecraft)`,
-                                        url: `https://namemc.com/profile/${mc.uuid}`,
+                                        url: `https://crafty.gg/player/${mc.uuid}`,
                                         color: 0x3BA55D,
                                         thumbnail: {
-                                            url: mc.skinUrl
+                                            url: mc.skinUrl,
                                         },
                                         fields: [{
                                                 name: "UUID",
-                                                value: mc.uuid
+                                                value: mc.uuid,
                                             },
                                             {
                                                 name: "Name History",
-                                                value: mc.nameHistory
-                                                    .map(n => n.name)
-                                                    .slice(-5)
-                                                    .join(" → "),
+                                                value: mc.nameHistory.length ?
+                                                    mc.nameHistory.slice(-5).join(" → ") :
+                                                    "No history available",
                                             },
                                             {
                                                 name: "Cape",
-                                                value: mc.capeUrl ? "Yes" : "No",
+                                                value: mc.hasCape ? "Yes" : "No",
                                                 inline: true,
                                             },
                                         ],
@@ -247,14 +246,14 @@ export default async (request, context) => {
                                             style: 5,
                                             label: "Download Skin",
                                             url: mc.downloadSkin,
-                                        }, ],
-                                    }, ],
+                                        }],
+                                    }],
                                 },
                             }), {
                                 status: 200,
                                 headers: {
                                     "Content-Type": "application/json"
-                                }
+                                },
                             });
                         }
 
@@ -320,5 +319,4 @@ export default async (request, context) => {
             }
         );
     }
-
 };
