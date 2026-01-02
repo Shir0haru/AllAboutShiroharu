@@ -98,11 +98,17 @@ export default async (request, context) => {
             }
             const playerJson = await playerRes.json();
             const data = playerJson.data;
+            const skins = playerJson.skins;
+            const capes = playerJson.capes;
+            const location = playerJson.location;
             return {
                 uuid: data.uuid,
                 name: data.username,
                 hasCape: Boolean(data.capes ?.length),
                 skinUrl: `https://minotar.net/helm/${data.uuid}/512.png`,
+                previewSkin: `https://crafty.gg/skins/${skins.id}`,
+                previewCape: `https://crafty.gg/capes/${capes.id}`,
+                userLocation: location.code + " " + location.country,
                 downloadSkin: `https://minecraft.tools/download-skin/${data.username}`,
             };
         }
@@ -170,7 +176,7 @@ export default async (request, context) => {
                                 type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                                 data: {
                                     embeds: [{
-                                        title: `${profile.displayName} (@${profile.name})`,
+                                        title: `Roblox Profile for @${profile.name}`,
                                         url: `https://www.roblox.com/users/${userId}/profile`,
                                         description: profile.description || "No description",
                                         thumbnail: {
@@ -211,7 +217,7 @@ export default async (request, context) => {
                                 type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                                 data: {
                                     embeds: [{
-                                        title: `${mc.name} (Minecraft)`,
+                                        title: `Minecraft Profile for ${mc.name}`,
                                         url: `https://crafty.gg/player/${mc.uuid}`,
                                         color: 0x3BA55D,
                                         thumbnail: {
@@ -219,12 +225,16 @@ export default async (request, context) => {
                                         },
                                         fields: [{
                                                 name: "UUID",
-                                                value: mc.uuid,
+                                                value: "``${mc.uuid}``",
                                             },
                                             {
-                                                name: "Cape",
-                                                value: mc.hasCape ? "Yes" : "No",
+                                                name: "Textures",
+                                                value: "Skins: [View Current Skin](${mc.previewSkin})\nCapes: [View Current Cape](${previewCape})",
                                                 inline: true,
+                                            },
+                                            {
+                                                name: "Information",
+                                                value: "Location: 
                                             },
                                         ],
                                     }],
@@ -309,5 +319,6 @@ export default async (request, context) => {
         );
     }
 };
+
 
 
