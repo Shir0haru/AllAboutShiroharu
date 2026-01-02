@@ -1,19 +1,7 @@
-import {
-    InteractionResponseType,
-    InteractionType,
-    verifyKey
-} from "https://esm.sh/discord-interactions@3.4.0";
+import {InteractionResponseType,InteractionType,verifyKey} from "https://esm.sh/discord-interactions@3.4.0";
 
-const INFO_COMMAND = {
-    name: "Info",
-    description: "Get an information about this bot.",
-};
-
-const HELP_COMMAND = {
-    name: "Help",
-    description: "Get a list of commands available.",
-};
-
+const INFO_COMMAND = {name: "Info", description: "Get an information about this bot.",};
+const HELP_COMMAND = {name: "Help", description: "Get a list of commands available.",};
 const PROFILE_COMMAND = {
     name: "profile",
     description: "Fetch the Developer's Game Profile.",
@@ -67,6 +55,16 @@ export default async (request, context) => {
             );
         }
 
+        function countryCodeToFlagEmoji(code) {
+	        if (!code || code.length !== 2) return "🌍";
+	        const upper = code.toUpperCase();
+	        const A = 0x1F1E6;
+	        return String.fromCodePoint(
+		        A + upper.charCodeAt(0) - 65,
+		        A + upper.charCodeAt(1) - 65
+	        );
+        }
+
         async function fetchRobloxProfile(username) {
             const idRes = await fetch("https://users.roblox.com/v1/usernames/users", {
                 method: "POST",
@@ -111,9 +109,9 @@ export default async (request, context) => {
                 uuid: data.uuid,
                 name: data.username,
                 skinUrl: `https://minotar.net/helm/${data.uuid}/512.png`,
-                previewSkin: `https://crafty.gg/skins/${data.skins.id}`,
-                previewCape: `https://crafty.gg/capes/${data.capes.id}`,
-                userLocation: data.location.code + " " + data.location.country,
+                previewSkin: `https://crafty.gg/skins/${data.skins.0.id}`,
+                previewCape: `https://crafty.gg/capes/${data.capes.0.id}`,
+                userLocation: data.location ? `${countryCodeToFlagEmoji(data.location.code)} ${data.location.country}` : "🌍 Unknown",
                 monthlyViews: data.views_monthly,
                 lifetimeViews: data.views_lifetime,
                 downloadSkin: `https://minecraft.tools/download-skin/${data.username}`,
@@ -335,3 +333,4 @@ export default async (request, context) => {
         );
     }
 };
+
