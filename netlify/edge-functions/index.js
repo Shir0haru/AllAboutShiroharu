@@ -55,35 +55,6 @@ export default async (request, context) => {
             );
         }
 
-        async function fetchRobloxProfile(username) {
-            const idRes = await fetch("https://users.roblox.com/v1/usernames/users", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    usernames: [username],
-                    excludeBannedUsers: false,
-                }),
-            });
-
-            const idJson = await idRes.json();
-            const user = idJson.data ?. [0];
-            if (!user) throw new Error("Roblox user not found");
-
-            const userId = user.id;
-            const profileRes = await fetch(`https://users.roblox.com/v1/users/${userId}`);
-            const profile = await profileRes.json();
-            const avatarRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userId}&size=420x420&format=Png&isCircular=true`);
-            const avatarJson = await avatarRes.json();
-            const avatarUrl = avatarJson.data ?. [0] ?.imageUrl;
-            return {
-                userId,
-                profile,
-                avatarUrl
-            };
-        }
-
 		async function fetchRobloxCreations(userId) {
 			const res = await fetch(`https://catalog.roblox.com/v1/search/items?creatorTargetId=${userId}&creatorType=User&limit=5&sortOrder=Desc&sortType=Updated`);
 			const json = await res.json();
@@ -118,6 +89,36 @@ export default async (request, context) => {
 				url: `https://www.roblox.com/games/${game.rootPlaceId}`,
 			}));
 		}
+
+		async function fetchRobloxProfile(username) {
+            const idRes = await fetch("https://users.roblox.com/v1/usernames/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    usernames: [username],
+                    excludeBannedUsers: false,
+                }),
+            });
+
+            const idJson = await idRes.json();
+            const user = idJson.data ?. [0];
+            if (!user) throw new Error("Roblox user not found");
+
+            const userId = user.id;
+            const profileRes = await fetch(`https://users.roblox.com/v1/users/${userId}`);
+            const profile = await profileRes.json();
+            const avatarRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userId}&size=420x420&format=Png&isCircular=true`);
+            const avatarJson = await avatarRes.json();
+            const avatarUrl = avatarJson.data ?. [0] ?.imageUrl;
+			const [creations, groups, games] = await Promise.all([
+        		fetchRobloxCreations(userId),
+        		fetchRobloxGroups(userId),
+        		fetchRobloxGames(userId)
+    		]);
+    		return { userId, profile, avatarUrl, creations, groups, games };
+        }
 
 		function countryCodeToFlagEmoji(code) {
 	        if (!code || code.length !== 2) return "🌍";
@@ -372,6 +373,7 @@ export default async (request, context) => {
         );
     }
 };
+
 
 
 
