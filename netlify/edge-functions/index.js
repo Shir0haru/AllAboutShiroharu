@@ -1,4 +1,8 @@
-import {InteractionResponseType, InteractionType, verifyKey} from "https://esm.sh/discord-interactions@3.4.0";
+import {
+    InteractionResponseType,
+    InteractionType,
+    verifyKey
+} from "https://esm.sh/discord-interactions@3.4.0";
 
 const INFO_COMMAND = {
     name: "Info",
@@ -76,7 +80,7 @@ export default async (request, context) => {
             });
 
             const idJson = await idRes.json();
-            const user = idJson.data ?.[0];
+            const user = idJson.data ?. [0];
             if (!user) throw new Error("Roblox user not found");
 
             const userId = user.id;
@@ -84,8 +88,12 @@ export default async (request, context) => {
             const profile = await profileRes.json();
             const avatarRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userId}&size=420x420&format=Png&isCircular=true`);
             const avatarJson = await avatarRes.json();
-            const avatarUrl = avatarJson.data ?.[0]?.imageUrl;
-            return {userId, profile, avatarUrl};
+            const avatarUrl = avatarJson.data ?. [0] ?.imageUrl;
+            return {
+                userId,
+                profile,
+                avatarUrl
+            };
         }
 
         async function fetchMinecraftProfile(username) {
@@ -98,23 +106,19 @@ export default async (request, context) => {
             }
             const playerJson = await playerRes.json();
             const data = playerJson.data;
-            const skins = playerJson.skins;
-            const capes = playerJson.capes;
             const location = playerJson.location;
             return {
                 uuid: data.uuid,
                 name: data.username,
-                hasCape: Boolean(data.capes ?.length),
                 skinUrl: `https://minotar.net/helm/${data.uuid}/512.png`,
-                previewSkin: `https://crafty.gg/skins/${skins.id}`,
-                previewCape: `https://crafty.gg/capes/${capes.id}`,
-                userLocation: location.code + " " + location.country,
+                previewSkin: `https://crafty.gg/skins/${data.skins.id}`,
+                previewCape: `https://crafty.gg/capes/${data.capes.id}`,
+                userLocation: data.location.code + " " + data.location.country,
                 monthlyViews: data.views_monthly,
                 lifetimeViews: data.views_lifetime,
                 downloadSkin: `https://minecraft.tools/download-skin/${data.username}`,
             };
         }
-
 
         const message = JSON.parse(rawBody);
         if (message.type === InteractionType.PING) {
@@ -227,16 +231,25 @@ export default async (request, context) => {
                                         },
                                         fields: [{
                                                 name: "UUID",
-                                                value: "``${mc.uuid}``",
+                                                value: `\`\`${mc.uuid}\`\``,
                                             },
                                             {
                                                 name: "Textures",
-                                                value: "Skins: [View Current Skin](${mc.previewSkin})\nCapes: [View Current Cape](${previewCape})",
+                                                value: [
+                                                    mc.previewSkin ?
+                                                    `Skins: [View Current Skin](${mc.previewSkin})` :
+                                                    "Skins: None",
+                                                    mc.previewCape ?
+                                                    `Capes: [View Current Cape](${mc.previewCape})` :
+                                                    "Capes: None",
+                                                ].join("\n"),
                                                 inline: true,
                                             },
                                             {
                                                 name: "Information",
-                                                value: "Location: ${mc.userLocation}\nMonthly Views: ${mc.monthlyViews}\nLifetime Views: ${mc.lifetimeViews}",
+                                                value: `Location: ${mc.userLocation}\n` +
+                                                    `Monthly Views: ${mc.monthlyViews}\n` +
+                                                    `Lifetime Views: ${mc.lifetimeViews}`,
                                             },
                                         ],
                                     }],
@@ -284,7 +297,8 @@ export default async (request, context) => {
                             }
                         });
                     }
-                } default:
+                }
+                default:
                     return new Response(JSON.stringify({
                         error: "Unknown Command",
                     }), {
@@ -321,8 +335,3 @@ export default async (request, context) => {
         );
     }
 };
-
-
-
-
-
