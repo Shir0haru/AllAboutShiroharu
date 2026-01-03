@@ -104,13 +104,7 @@ export default async (request, context) => {
                 );
                 const catalogJson = await catalogRes.json();
                 assets = catalogJson.data || [];
-                return {
-                    userId,
-                    profile,
-                    avatarUrl,
-                    assets
-                };
-            }
+            } return { userId, profile, avatarUrl, assets };
         }
 
         function groupAvatarAssets(assets) {
