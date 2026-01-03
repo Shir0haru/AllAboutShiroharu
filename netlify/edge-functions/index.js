@@ -39,13 +39,7 @@ export default async (request, context) => {
         const signature = request.headers.get("x-signature-ed25519");
         const timestamp = request.headers.get("x-signature-timestamp");
         const rawBody = await request.text();
-
-        const isValidRequest = verifyKey(
-            rawBody,
-            signature,
-            timestamp,
-            Deno.env.get("PUBLIC_KEY"),
-        );
+        const isValidRequest = verifyKey(rawBody, signature, timestamp, Deno.env.get("PUBLIC_KEY"),);
 
         if (!isValidRequest) {
             console.error("Invalid Request");
@@ -62,6 +56,8 @@ export default async (request, context) => {
         }
 
         async function fetchRobloxProfile(username) {
+            console.log("Fetching profile for:", username);
+
             const idRes = await fetch("https://users.roblox.com/v1/usernames/users", {
                 method: "POST",
                 headers: {
@@ -74,20 +70,34 @@ export default async (request, context) => {
             });
 
             const idJson = await idRes.json();
+            console.log("ID Response:", idJson);
+
             const user = idJson.data ?.[0];
             if (!user) throw new Error("Roblox user not found");
 
             const userId = user.id;
+            console.log("User ID:", userId);
+
             const profileRes = await fetch(`https://users.roblox.com/v1/users/${userId}`);
             const profile = await profileRes.json();
+            console.log("Profile:", profile);
+
             const avatarRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar?userIds=${userId}&size=420x420&format=Png&isCircular=true`);
             const avatarJson = await avatarRes.json();
             const avatarUrl = avatarJson.data ?.[0]?.imageUrl;
+            console.log("Avatar URL:", avatarUrl);
+
             const wearingRes = await fetch(`https://avatar.roblox.com/v1/users/${userId}/currently-wearing`);
             const wearingJson = await wearingRes.json();
+            console.log("Wearing Response:", wearingJson);
+            console.log("Asset IDs:", wearingJson.assetIds);
+
             const assetIds = wearingJson.assetIds || [];
             let assets = [];
+
             if (assetIds.length > 0) {
+                console.log("Fetching catalog details for", assetIds.length, "assets");
+
                 const catalogRes = await fetch(
                     "https://catalog.roblox.com/v1/catalog/items/details", {
                         method: "POST",
@@ -102,9 +112,14 @@ export default async (request, context) => {
                         }),
                     }
                 );
+
                 const catalogJson = await catalogRes.json();
+                console.log("Catalog Response:", catalogJson);
                 assets = catalogJson.data || [];
-            } return { userId, profile, avatarUrl, assets };
+                console.log("Assets parsed:", assets.length);
+            } else {
+                console.log("No asset IDs found - user may not be wearing anything");
+            } return {userId, profile, avatarUrl, assets};
         }
 
         function groupAvatarAssets(assets) {
