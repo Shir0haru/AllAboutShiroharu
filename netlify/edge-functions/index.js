@@ -96,27 +96,27 @@ export default async (request, context) => {
             let assets = [];
 
             if (assetIds.length > 0) {
-                console.log("Fetching catalog details for", assetIds.length, "assets");
-
-                const catalogRes = await fetch(
-                    "https://catalog.roblox.com/v1/catalog/items/details", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            items: assetIds.map(id => ({
-                                itemType: "Asset",
-                                id,
-                            })),
-                        }),
+                console.log("Fetching asset details for", assetIds.length, "assets");
+                const assetPromises = assetIds.map(async (assetId) => {
+                    try {
+                        const res = await fetch(`https://economy.roblox.com/v2/assets/${assetId}/details`);
+                        if (!res.ok) return null;
+                        const data = await res.json();
+                        return {
+                            id: data.AssetId,
+                            name: data.Name,
+                            assetType: data.AssetTypeId,
+                            creatorName: data.Creator ?.Name || "Unknown",
+                        };
+                    } catch (err) {
+                        console.error(`Failed to fetch asset ${assetId}:`, err);
+                        return null;
                     }
-                );
+                });
 
-                const catalogJson = await catalogRes.json();
-                console.log("Catalog Response:", catalogJson);
-                assets = catalogJson.data || [];
-                console.log("Assets parsed:", assets.length);
+                const assetResults = await Promise.all(assetPromises);
+                assets = assetResults.filter(a => a !== null);
+                console.log("Assets fetched:", assets.length);
             } else {
                 console.log("No asset IDs found - user may not be wearing anything");
             } return {userId, profile, avatarUrl, assets};
