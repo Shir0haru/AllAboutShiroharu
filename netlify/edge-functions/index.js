@@ -122,41 +122,15 @@ export default async (request, context) => {
             } return {userId, profile, avatarUrl, assets};
         }
 
-        function groupAvatarAssets(assets) {
-            const map = {
-                Head: [],
-                Hair: [],
-                "Classic Shirts": [],
-                "Classic Pants": [],
-                Accessories: [],
-                Other: [],
-            };
-
-            for (const item of assets) {
-                const name = `${item.name} — by ${item.creatorName}`;
-
-                switch (item.assetType) {
-                    case "Head":
-                        map.Head.push(name);
-                        break;
-                    case "HairAccessory":
-                        map.Hair.push(name);
-                        break;
-                    case "Shirt":
-                        map["Classic Shirts"].push(name);
-                        break;
-                    case "Pants":
-                        map["Classic Pants"].push(name);
-                        break;
-                    case "Accessory":
-                        map.Accessories.push(name);
-                        break;
-                    default:
-                        map.Other.push(name);
-                }
-            }
-            return map;
-        }
+		function groupAvatarAssets(assets) {
+    		const items = [];
+    
+    		for (const item of assets) {
+        		items.push(`${item.name} - by ${item.creatorName}`);
+    		}
+    
+    		return items;
+		}
 
         function countryCodeToFlagEmoji(code) {
             if (!code || code.length !== 2) return "🌍";
@@ -269,7 +243,10 @@ export default async (request, context) => {
                                                 name: "Created",
                                                 value: profile.created,
                                             },
-                                            ...fields,
+                                            {
+                                				name: "User's Wearing",
+                                				value: avatarItems.length ? avatarItems.join("\n") : "Not wearing anything",
+                            				},
                                         ],
                                     }],
                                     components: [{
@@ -420,3 +397,4 @@ export default async (request, context) => {
         );
     }
 };
+
