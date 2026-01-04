@@ -219,11 +219,6 @@ export default async (request, context) => {
                             const USERNAME = "Shir0haru";
                             const {userId, profile, avatarUrl, assets} = await fetchRobloxProfile(USERNAME);
                             const avatarItems = groupAvatarAssets(assets);
-                            const fields = Object.entries(avatarItems).map(([category, items]) => ({
-	                            name: category,
-	                            value: items.length ? items.join("\n") : "null",
-	                            inline: false,
-                            }));
                             return new Response(JSON.stringify({
                                 type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                                 data: {
@@ -397,4 +392,5 @@ export default async (request, context) => {
         );
     }
 };
+
 
