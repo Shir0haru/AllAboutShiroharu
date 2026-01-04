@@ -97,39 +97,45 @@ export default async (request, context) => {
 
             if (assetIds.length > 0) {
                 console.log("Fetching asset details for", assetIds.length, "assets");
-                const assetPromises = assetIds.map(async (assetId) => {
-                    try {
-                        const res = await fetch(`https://economy.roblox.com/v2/assets/${assetId}/details`);
-                        if (!res.ok) return null;
-                        const data = await res.json();
-                        return {
-                            id: data.AssetId,
-                            name: data.Name,
-                            assetType: data.AssetTypeId,
-                            creatorName: data.Creator ?.Name || "Unknown",
-                        };
-                    } catch (err) {
-                        console.error(`Failed to fetch asset ${assetId}:`, err);
-                        return null;
-                    }
-                });
+                const chunkSize = 10;
+                const chunks = [];
+                for (let i = 0; i < assetIds.length; i += chunkSize) {
+                    chunks.push(assetIds.slice(i, i + chunkSize));
+                }
 
-                const assetResults = await Promise.all(assetPromises);
-                assets = assetResults.filter(a => a !== null);
-                console.log("Assets fetched:", assets.length);
+                let assets = [];
+                for (const chunk of chunks) {
+                    const chunkPromises = chunk.map(async (assetId) => {
+                        try {
+                            await new Promise(resolve => setTimeout(resolve, 200));
+                            const res = await fetch(`https://economy.roblox.com/v2/assets/${assetId}/details`);
+                            if (!res.ok) return null;
+                            const data = await res.json();
+                            return {
+                                id: data.AssetId,
+                                name: data.Name,
+                                assetType: data.AssetTypeId,
+                                creatorName: data.Creator ?.Name || "Unknown",
+                            };
+                        } catch (err) {
+                            console.error(`Failed to fetch asset ${assetId}:`, err);
+                            return null;
+                        }
+                    });
+
+                    const chunkResults = await Promise.all(chunkPromises);
+                    assets.push(...chunkResults.filter(a => a !== null));
+                } console.log("Assets fetched:", assets.length);
             } else {
                 console.log("No asset IDs found - user may not be wearing anything");
             } return {userId, profile, avatarUrl, assets};
         }
 
 		function groupAvatarAssets(assets) {
-    		const items = [];
-    
+    		const items = [];    
     		for (const item of assets) {
         		items.push(`${item.name} - by ${item.creatorName}`);
-    		}
-    
-    		return items;
+    		} return items;
 		}
 
         function countryCodeToFlagEmoji(code) {
@@ -213,56 +219,55 @@ export default async (request, context) => {
                     });
 
                 case PROFILE_COMMAND.name.toLowerCase(): {
-                    const game = message.data.options ?.[0]?.value;
-                    try {
-                        if (game === "roblox") {
-                            const USERNAME = "Shir0haru";
-                            const {userId, profile, avatarUrl, assets} = await fetchRobloxProfile(USERNAME);
-                            const avatarItems = groupAvatarAssets(assets);
-                            return new Response(JSON.stringify({
-                                type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                                data: {
-                                    embeds: [{
-                                        title: `Roblox Profile for @${profile.name}`,
-                                        url: `https://www.roblox.com/users/${userId}/profile`,
-                                        description: profile.description || "No description",
-                                        thumbnail: {
-                                            url: avatarUrl
-                                        },
-                                        color: 0x00A2FF,
-                                        fields: [{
-                                                name: "User ID",
-                                                value: String(userId),
+                        const game = message.data.options ?.[0]?.value;
+                        try {
+                            if (game === "roblox") {
+                                const USERNAME = "Shir0haru";
+                                const {userId, profile, avatarUrl, assets} = await fetchRobloxProfile(USERNAME);
+                                const avatarItems = groupAvatarAssets(assets);
+                                return new Response(JSON.stringify({
+                                    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+                                    data: {
+                                        embeds: [{
+                                            title: `Roblox Profile for @${profile.name}`,
+                                            url: `https://www.roblox.com/users/${userId}/profile`,
+                                            description: profile.description || "No description",
+                                            thumbnail: {
+                                                url: avatarUrl
                                             },
-                                            {
-                                                name: "Created",
-                                                value: profile.created,
-                                            },
-                                            {
-                                				name: "User's Wearing",
-                                				value: avatarItems.length ? avatarItems.join("\n") : "Not wearing anything",
-                            				},
-                                        ],
-                                    }],
-                                    components: [{
-                                        type: 1,
-                                        components: [
-                                            {
+                                            color: 0x00A2FF,
+                                            fields: [{
+                                                    name: "User ID",
+                                                    value: String(userId),
+                                                },
+                                                {
+                                                    name: "Created",
+                                                    value: profile.created,
+                                                },
+                                                {
+                                                    name: "User's Wearing",
+                                                    value: avatarItems.length ? avatarItems.join("\n") : "Not wearing anything",
+                                                    inline: false,
+                                                },
+                                            ],
+                                        }],
+                                        components: [{
+                                            type: 1,
+                                            components: [{
                                                 type: 2,
                                                 style: 5,
                                                 label: "Complete Profile",
                                                 url: `https://www.roblox.com/users/${userId}/profile`,
-                                            },
-                                        ],
-                                    }],
-                                },
-                            }), {
-                                status: 200,
-                                headers: {
-                                    "Content-Type": "application/json"
-                                }
-                            });
-                        }
+                                            }, ],
+                                        }],
+                                    },
+                                }), {
+                                    status: 200,
+                                    headers: {
+                                        "Content-Type": "application/json"
+                                    }
+                                });
+                            }
 
                         if (game === "minecraft") {
                             const USERNAME = "Shir0haru";
@@ -392,5 +397,3 @@ export default async (request, context) => {
         );
     }
 };
-
-
