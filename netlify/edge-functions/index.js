@@ -97,35 +97,44 @@ export default async (request, context) => {
 
             if (assetIds.length > 0) {
                 console.log("Fetching asset details for", assetIds.length, "assets");
-                const chunkSize = 10;
-                const chunks = [];
-                for (let i = 0; i < assetIds.length; i += chunkSize) {
-                    chunks.push(assetIds.slice(i, i + chunkSize));
-                }
 
-                let assets = [];
-                for (const chunk of chunks) {
-                    const chunkPromises = chunk.map(async (assetId) => {
-                        try {
-                            await new Promise(resolve => setTimeout(resolve, 200));
-                            const res = await fetch(`https://economy.roblox.com/v2/assets/${assetId}/details`);
-                            if (!res.ok) return null;
-                            const data = await res.json();
+                const assetPromises = assetIds.map(async (assetId) => {
+                    try {
+                        const res = await fetch(`https://economy.roblox.com/v2/assets/${assetId}/details`);
+
+                        if (!res.ok) {
+                            console.error(`Asset ${assetId} HTTP status: ${res.status}`);
                             return {
-                                id: data.AssetId,
-                                name: data.Name,
-                                assetType: data.AssetTypeId,
-                                creatorName: data.Creator ?.Name || "Unknown",
+                                id: assetId,
+                                name: `Asset ${assetId}`,
+                                assetType: "Unknown",
+                                creatorName: "Unknown",
                             };
-                        } catch (err) {
-                            console.error(`Failed to fetch asset ${assetId}:`, err);
-                            return null;
                         }
-                    });
 
-                    const chunkResults = await Promise.all(chunkPromises);
-                    assets.push(...chunkResults.filter(a => a !== null));
-                } console.log("Assets fetched:", assets.length);
+                        const data = await res.json();
+
+                        return {
+                            id: data.AssetId || assetId,
+                            name: data.Name || `Asset ${assetId}`,
+                            assetType: data.AssetTypeId || "Unknown",
+                            creatorName: data.Creator ?.Name || "Unknown",
+                        };
+                    } catch (err) {
+                        console.error(`Failed to fetch asset ${assetId}:`, err.message);
+                        return {
+                            id: assetId,
+                            name: `Asset ${assetId}`,
+                            assetType: "Unknown",
+                            creatorName: "Unknown",
+                        };
+                    }
+                });
+
+                const assetResults = await Promise.all(assetPromises);
+                assets = assetResults;
+                console.log("Total assets processed:", assets.length);
+                console.log("Asset details:", JSON.stringify(assets, null, 2));
             } else {
                 console.log("No asset IDs found - user may not be wearing anything");
             } return {userId, profile, avatarUrl, assets};
